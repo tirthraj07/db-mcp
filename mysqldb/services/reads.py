@@ -8,7 +8,7 @@ from mysql.connector import Error
 
 logger = LoggerFactory.get_logger(__name__)
 
-def get_all_rows(host: str, user: str, password: str, database: str, table_name: str) -> Optional[List[Dict]]:
+def get_all_rows(host: str, user: str, password: str, database: str, table_name: str, port: int = 3306) -> Optional[List[Dict]]:
     """
     Retrieves all rows from the specified table in the given database.
 
@@ -18,13 +18,16 @@ def get_all_rows(host: str, user: str, password: str, database: str, table_name:
         password (str): The database password.
         database (str): The name of the database.
         table_name (str): The name of the table to fetch data from.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[Dict]]: A list of dictionaries where each dictionary represents a row from the table.
         Returns None if an error occurs or the table is empty.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host=host, user=user, password=password, database=database)
+        connection: MySQLConnection = connect_to_mysql(host=host, user=user, password=password, database=database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database: '{database}'")
             return None
@@ -58,7 +61,7 @@ def get_all_rows(host: str, user: str, password: str, database: str, table_name:
             logger.error(f"Error while closing resources: {str(ex)}")
 
 def get_filtered_rows(
-    host: str, user: str, password: str, database: str, table_name: str, filters: Dict[str, Any]
+    host: str, user: str, password: str, database: str, table_name: str, filters: Dict[str, Any], port: int = 3306
 ) -> Optional[List[Dict]]:
     """
     Retrieves rows from the specified table in the given database based on filter criteria.
@@ -70,13 +73,16 @@ def get_filtered_rows(
         database (str): The name of the database.
         table_name (str): The name of the table to fetch data from.
         filters (Dict[str, Any]): A dictionary where keys are column names and values are the filtering criteria.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[Dict]]: A list of dictionaries where each dictionary represents a row from the table.
         Returns None if an error occurs or no data matches the filters.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host=host, user=user, password=password, database=database)
+        connection: MySQLConnection = connect_to_mysql(host=host, user=user, password=password, database=database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database: '{database}'")
             return None
@@ -115,7 +121,7 @@ def get_filtered_rows(
             logger.error(f"Error while closing resources: {str(ex)}")
 
 def get_sorted_rows(
-    host: str, user: str, password: str, database: str, table_name: str, sort_by: str, order: str = 'ASC'
+    host: str, user: str, password: str, database: str, table_name: str, sort_by: str, order: str = 'ASC', port: int = 3306
 ) -> Optional[List[Dict]]:
     """
     Retrieves sorted rows from the specified table.
@@ -128,12 +134,15 @@ def get_sorted_rows(
         table_name (str): The table name.
         sort_by (str): The column to sort by.
         order (str): The sort order ('ASC' or 'DESC'). Default is 'ASC'.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[Dict]]: Sorted rows as a list of dictionaries, or None on error.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host, user, password, database)
+        connection: MySQLConnection = connect_to_mysql(host, user, password, database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database: '{database}'")
             return None
@@ -152,11 +161,13 @@ def get_sorted_rows(
         return None
 
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 def get_limited_rows(
-    host: str, user: str, password: str, database: str, table_name: str, limit: int, offset: int = 0
+    host: str, user: str, password: str, database: str, table_name: str, limit: int, offset: int = 0, port: int = 3306
 ) -> Optional[List[Dict]]:
     """
     Retrieves a limited number of rows from the specified table.
@@ -169,12 +180,15 @@ def get_limited_rows(
         table_name (str): The table name.
         limit (int): The number of rows to fetch.
         offset (int): The starting point for fetching rows. Default is 0.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[Dict]]: Limited rows as a list of dictionaries, or None on error.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host, user, password, database)
+        connection: MySQLConnection = connect_to_mysql(host, user, password, database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database: '{database}'")
             return None
@@ -193,11 +207,13 @@ def get_limited_rows(
         return None
 
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 def get_distinct_values(
-    host: str, user: str, password: str, database: str, table_name: str, column: str
+    host: str, user: str, password: str, database: str, table_name: str, column: str, port: int = 3306
 ) -> Optional[List[Any]]:
     """
     Retrieves distinct values from a specific column in the given table.
@@ -209,12 +225,15 @@ def get_distinct_values(
         database (str): The database name.
         table_name (str): The table name.
         column (str): The column name.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[Any]]: A list of distinct values or None on error.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host, user, password, database)
+        connection: MySQLConnection = connect_to_mysql(host, user, password, database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database: '{database}'")
             return None
@@ -233,11 +252,13 @@ def get_distinct_values(
         return None
 
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 def get_aggregated_data(
-    host: str, user: str, password: str, database: str, table_name: str, aggregation: str, column: str
+    host: str, user: str, password: str, database: str, table_name: str, aggregation: str, column: str, port: int = 3306
 ) -> Optional[Any]:
     """
     Retrieves aggregated data from a specified column in the given table.
@@ -245,12 +266,17 @@ def get_aggregated_data(
     Args:
         aggregation (str): The aggregation function (e.g., COUNT, SUM, AVG).
         column (str): The column name.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[Any]: The result of the aggregation or None on error.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host, user, password, database)
+        connection: MySQLConnection = connect_to_mysql(host, user, password, database, port=port)
+        if not connection:
+            return None
         cursor: MySQLCursor = connection.cursor()
 
         query = f"SELECT {aggregation}(`{column}`) FROM {table_name};"
@@ -265,11 +291,13 @@ def get_aggregated_data(
         return None
 
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 def get_grouped_data(
-    host: str, user: str, password: str, database: str, table_name: str, group_by: str, aggregation: str, column: str
+    host: str, user: str, password: str, database: str, table_name: str, group_by: str, aggregation: str, column: str, port: int = 3306
 ) -> Optional[Dict[str, Any]]:
     """
     Groups data by a specified column and applies an aggregation function.
@@ -283,13 +311,18 @@ def get_grouped_data(
         group_by (str): The column to group by.
         aggregation (str): The aggregation function (e.g., SUM, AVG).
         column (str): The column to aggregate.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[Dict[str, Any]]: A dictionary where keys are group values and values are aggregated data,
         or None if an error occurs.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host, user, password, database)
+        connection: MySQLConnection = connect_to_mysql(host, user, password, database, port=port)
+        if not connection:
+            return None
         cursor: MySQLCursor = connection.cursor(dictionary=True)
 
         query = f"SELECT `{group_by}`, {aggregation}(`{column}`) AS aggregate FROM {table_name} GROUP BY `{group_by}`;"
@@ -297,15 +330,18 @@ def get_grouped_data(
 
         cursor.execute(query)
         results = cursor.fetchall()
-        cursor.close()
-        connection.close()
         return {row[group_by]: row['aggregate'] for row in results}
 
     except Error as e:
         logger.error(f"Error fetching grouped data from '{table_name}': {str(e)}")
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
-def execute_custom_query(host: str, user: str, password: str, database: str, query: str) -> Optional[List[Dict]]:
+def execute_custom_query(host: str, user: str, password: str, database: str, query: str, port: int = 3306) -> Optional[List[Dict]]:
     """
     Executes a custom SQL query and returns the result as a list of dictionaries.
 
@@ -315,12 +351,17 @@ def execute_custom_query(host: str, user: str, password: str, database: str, que
         password (str): The database password.
         database (str): The database name.
         query (str): The SQL query to execute.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[Dict]]: The result of the query as a list of dictionaries, or None if an error occurs.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host, user, password, database)
+        connection: MySQLConnection = connect_to_mysql(host, user, password, database, port=port)
+        if not connection:
+            return None
         cursor: MySQLCursor = connection.cursor(dictionary=True)
 
         logger.info(f"Executing custom query: {query}")
@@ -333,5 +374,7 @@ def execute_custom_query(host: str, user: str, password: str, database: str, que
         return None
 
     finally:
-        cursor.close()
-        connection.close()
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()

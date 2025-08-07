@@ -10,7 +10,7 @@ from mysql.connector import MySQLConnection
 
 logger = LoggerFactory.get_logger(__name__)
 
-def get_tables(host:str, user:str, password:str, database:str) -> Optional[List[str]]:
+def get_tables(host:str, user:str, password:str, database:str, port:int=3306) -> Optional[List[str]]:
     """
     Retrieves the list of table names in a MySQL database.
 
@@ -19,12 +19,15 @@ def get_tables(host:str, user:str, password:str, database:str) -> Optional[List[
         user (str): The username to authenticate with.
         password (str): The password for the MySQL user.
         database (str): The name of the database to fetch tables from.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[List[str]]: A list of table names if successful, otherwise None.
     """
+    connection = None
+    cursor = None
     try:
-        connection = connect_to_mysql(host=host, user=user, password=password, database=database)
+        connection = connect_to_mysql(host=host, user=user, password=password, database=database, port=port)
         if not connection:
             logger.error(f"Failed to connect to MYSQL database: '{database}'")
             return None
@@ -44,14 +47,17 @@ def get_tables(host:str, user:str, password:str, database:str) -> Optional[List[
         else:
             logger.info(f"Retrieved tables from database '{database}' successfully")
 
-        cursor.close()
-        connection.close()
         return table_names
     except Error as e:
         logger.exception(f"Error while fetching tables from MySQL database '{database}': {str(e)}")
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
-def get_schema(host:str, user:str, password:str, database:str) -> Optional[Dict[str, list]]:
+def get_schema(host:str, user:str, password:str, database:str, port:int=3306) -> Optional[Dict[str, list]]:
     """
     Retrieves the schema of a given MySQL database as a dictionary.
 
@@ -60,20 +66,23 @@ def get_schema(host:str, user:str, password:str, database:str) -> Optional[Dict[
         user (str): The username to authenticate with.
         password (str): The password for the MySQL user.
         database (str): The name of the database to retrieve the schema from.
+        port (int): The port number for the MySQL server.
 
     Returns:
         Optional[Dict[str, list]]: A dictionary where keys are table names and values are lists of column definitions.
         Returns None if the connection or table retrieval fails.
     """
+    connection = None
+    cursor = None
     try:
-        connection: MySQLConnection = connect_to_mysql(host=host, user=user, password=password, database=database)
+        connection: MySQLConnection = connect_to_mysql(host=host, user=user, password=password, database=database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database : '{database}'")
             return None
 
         cursor: MySQLCursor = connection.cursor(dictionary=True)
 
-        tables = get_tables(host=host, user=user, password=password, database=database)
+        tables = get_tables(host=host, user=user, password=password, database=database, port=port)
         if not tables:
             logger.error(f"Failed to fetch tables from database")   
             return None
@@ -98,16 +107,19 @@ def get_schema(host:str, user:str, password:str, database:str) -> Optional[Dict[
 
             schema[table_name] = column_info
         
-        cursor.close()
-        connection.close()
         logger.info(f"Schema retrieval completed for database: '{database}'")
         return schema
     
     except Error as e:
         logger.error(f"An error occurred while retrieving schema: {str(e)}")
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
     
-def get_table_description(host:str, user: str, password:str, database:str, table_name:str) -> Optional[Dict[str, list]]:
+def get_table_description(host:str, user: str, password:str, database:str, table_name:str, port:int=3306) -> Optional[Dict[str, list]]:
     """
     Retrieves the schema of a specific table from a given MySQL database.
 
@@ -117,13 +129,16 @@ def get_table_description(host:str, user: str, password:str, database:str, table
         password (str): The password for the MySQL user.
         database (str): The name of the database containing the table.
         table_name (str): The name of the table to retrieve the schema from.
+        port (int): The port number of the MySQL server.
 
     Returns:
         Optional[Dict[str, list]]: A dictionary where the key is the table name and the value is a list of column definitions.
         Returns None if the connection or schema retrieval fails.
     """
+    connection = None
+    cursor = None
     try:
-        connection = connect_to_mysql(host=host, user=user, password=password, database=database)
+        connection = connect_to_mysql(host=host, user=user, password=password, database=database, port=port)
         if not connection:
             logger.error(f"Failed to connect to database : '{database}'")
             return None
@@ -152,3 +167,8 @@ def get_table_description(host:str, user: str, password:str, database:str, table
     except Error as e:
         logger.error(f"An error occurred while retrieving table description: {str(e)}")
         return None
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
